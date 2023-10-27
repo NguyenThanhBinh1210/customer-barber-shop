@@ -12,10 +12,13 @@ import ModalLogin from "../../components/Modal/ModalLogin";
 import { MdContentCut } from "react-icons/md";
 import moment from "moment";
 import Scroll from "../../components/ScrollToTop/Scroll";
+import ModalBooking from "../../components/ModalBooking/ModalBooking";
 
 export default function Appointment() {
   const { user: currentUser } = useContext(AuthContext);
   const [user, setUser] = useState(currentUser);
+  const [isModalOpen, setModalOpen] = useState(false);
+  const [booking, setBooking] = useState();
   const [open, setOpen] = useState(false);
   const [staff, setStaff] = useState([]);
   const [service, setService] = useState([]);
@@ -36,6 +39,8 @@ export default function Appointment() {
   const [store, setStore] = useState([]);
   const [storeId, setStoreId] = useState("");
   const [showForm, setShowForm] = useState(false);
+  const [staffName, setStaffName] = useState("");
+  const [slotText, setSlotText] = useState("");
   const currentTime = new Date();
 
   useEffect(() => {
@@ -67,12 +72,6 @@ export default function Appointment() {
     }
   }, [storeId]);
   useEffect(() => {
-    // const fetchStaff = async () => {
-    //   const res = await axios.get("http://localhost:8800/api/staff/all");
-    //   setStaff(res.data.value);
-    // };
-    // fetchStaff();
-    // fetService
     const fetchStore = async () => {
       const res = await axios.get("http://localhost:8800/api/store/get");
       setStore(res.data);
@@ -93,10 +92,12 @@ export default function Appointment() {
   };
 
   const handleStaff = async (e) => {
+    setStaffName(e.target.options[e.target.selectedIndex].text);
     setStep2(true);
     setStaffId(e.target.value);
   };
-  const handleSlot = async (slotid, index) => {
+  const handleSlot = async (e, slotid, index) => {
+    setSlotText(e.target.textContent);
     setSlotId(slotid);
     setStep4(true);
     setCheck(index);
@@ -122,7 +123,7 @@ export default function Appointment() {
     } catch (error) {}
   };
   const history = useNavigate();
-  console.log(nameService);
+  // console.log(nameService);
   const submitBooking = async () => {
     const data = {
       StaffId: staffId,
@@ -135,20 +136,21 @@ export default function Appointment() {
       Services: idService,
       storeId: storeId,
     };
-    console.log(data);
-    try {
-      const res = await axios.post(
-        "http://localhost:8800/api/appointment/add",
-        data
-      );
+    setBooking(data);
+    setModalOpen(true);
+    // try {
+    //   const res = await axios.post(
+    //     "http://localhost:8800/api/appointment/add",
+    //     data
+    //   );
 
-      toast.success("Appointment successfully!!");
-      setTimeout(() => {
-        history("/home");
-      }, 3000);
-    } catch (error) {
-      toast.error("Appointment failed");
-    }
+    //   toast.success("Appointment successfully!!");
+    //   setTimeout(() => {
+    //     history("/home");
+    //   }, 3000);
+    // } catch (error) {
+    //   toast.error("Appointment failed");
+    // }
   };
 
   return (
@@ -354,8 +356,8 @@ export default function Appointment() {
                             <button
                               key={index}
                               className="slot-item"
-                              onClick={() => {
-                                handleSlot(slot._id, index);
+                              onClick={(e) => {
+                                handleSlot(e, slot._id, index);
                               }}
                               style={{
                                 backgroundColor:
@@ -378,7 +380,7 @@ export default function Appointment() {
                       onClick={submitBooking}
                     >
                       {" "}
-                      Complete
+                      Next step
                     </button>
                   </React.Fragment>
                 ) : (
@@ -404,6 +406,15 @@ export default function Appointment() {
         </div>
       )}
       <Scroll />
+      <ModalBooking
+        data={booking}
+        onClose={() => setModalOpen(false)}
+        isOpen={isModalOpen}
+        nameService={nameService}
+        staffName={staffName}
+        slotText={slotText}
+        date={date}
+      />
     </div>
   );
 }
